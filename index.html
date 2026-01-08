@@ -340,10 +340,47 @@
         .image-preview:hover .remove-image {
             display: block;
         }
+        
+        .image-type-select {
+            margin-bottom: 15px;
+        }
+        
+        .type-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .type-btn {
+            flex: 1;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #aaa;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .type-btn.active {
+            border-color: #5865f2;
+            background: #5865f2;
+            color: white;
+        }
+        
+        .custom-message-container {
+            margin-bottom: 25px;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Left Section: Pokétwo Spawn Sender -->
         <div class="section">
             <div class="box">
                 <div class="title">pokétwo spawn sender</div>
@@ -359,6 +396,16 @@
                     </div>
                 </div>
                 
+                <div class="image-type-select">
+                    <div class="dropdown">
+                        <label>spawn type</label>
+                        <div class="type-buttons">
+                            <button class="type-btn active" onclick="selectSpawnType('original')">original</button>
+                            <button class="type-btn" onclick="selectSpawnType('custom')">custom message</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="color-picker-container">
                     <div class="color-picker">
                         <div class="color-label">embed color</div>
@@ -370,21 +417,32 @@
                 <div class="image-upload-container">
                     <div class="image-upload">
                         <div class="image-label">pokémon image</div>
-                        <div class="image-preview" id="image-preview">
+                        <div class="image-preview" id="spawn-image-preview">
                             <div style="color: #777; text-align: center;">no image selected</div>
-                            <button class="remove-image" id="remove-image">×</button>
+                            <button class="remove-image" id="remove-spawn-image">×</button>
                         </div>
-                        <label for="file-input" class="upload-button">
+                        <label for="spawn-file-input" class="upload-button">
                             choose image file
                         </label>
-                        <input type="file" id="file-input" class="file-input" accept="image/*">
+                        <input type="file" id="spawn-file-input" class="file-input" accept="image/*">
                     </div>
                 </div>
                 
-                <div class="preview-box" id="preview-box">
-                    <div class="preview-text">A wild pokémon has appeared!</div>
-                    <div class="preview-text">Guess the pokémon and type <span style="color: #eb459e;">@Pokétwo#8236</span> catch <span style="color: #57F287;">pokémon</span> to catch it!</div>
-                    <div class="preview-image-container" id="preview-image-container">
+                <div class="custom-message-container" id="custom-message-container">
+                    <div class="message-box">
+                        <textarea 
+                            id="custom-message-input" 
+                            placeholder="type custom spawn message..."
+                            rows="3"
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <div class="preview-box" id="spawn-preview-box">
+                    <div class="preview-text" id="preview-message">A wild pokémon has appeared!</div>
+                    <div class="preview-text" id="preview-catch">Guess the pokémon and type <span style="color: #eb459e;">@Pokétwo#8236</span> catch <span style="color: #57F287;">pokémon</span> to catch it!</div>
+                    <div class="preview-image-container" id="spawn-preview-image-container">
+                        <!-- Image will appear here -->
                     </div>
                 </div>
                 
@@ -399,12 +457,13 @@
                 
                 <div id="spawn-status" class="status"></div>
                 
-                <div class="hint">
+                <div class="hint" id="spawn-hint">
                     upload pokémon image and click to send spawn
                 </div>
             </div>
         </div>
         
+        <!-- Right Section: Pokétwo Message Sender -->
         <div class="section">
             <div class="box">
                 <div class="title">pokétwo message sender</div>
@@ -420,6 +479,16 @@
                     </div>
                 </div>
                 
+                <div class="image-type-select">
+                    <div class="dropdown">
+                        <label>message type</label>
+                        <div class="type-buttons">
+                            <button class="type-btn active" onclick="selectMessageType('text')">text only</button>
+                            <button class="type-btn" onclick="selectMessageType('image')">with image</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="message-box">
                     <textarea 
                         id="message-input" 
@@ -427,6 +496,20 @@
                         autofocus
                         rows="4"
                     ></textarea>
+                </div>
+                
+                <div class="image-upload-container" id="message-image-container" style="display: none;">
+                    <div class="image-upload">
+                        <div class="image-label">image attachment</div>
+                        <div class="image-preview" id="message-image-preview">
+                            <div style="color: #777; text-align: center;">no image selected</div>
+                            <button class="remove-image" id="remove-message-image">×</button>
+                        </div>
+                        <label for="message-file-input" class="upload-button">
+                            choose image file
+                        </label>
+                        <input type="file" id="message-file-input" class="file-input" accept="image/*">
+                    </div>
                 </div>
                 
                 <div class="send-button-container">
@@ -441,37 +524,57 @@
                 <div id="message-status" class="status"></div>
                 
                 <div class="hint">
-                    type message and click to send
+                    type message with or without image
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // webhook urls for spawn channels
         const webhooks = {
             'spawns-1': 'https://discord.com/api/webhooks/1458732887150170317/FY6pfqa0pbsMg4tbx9lhBSYbww05koPopYpbB08Szjy37pnza_mK7HAw4K8EAW_h97Cr',
             'spawns-2': 'https://discord.com/api/webhooks/1458732405035892832/-bvLKtLxmxEhZRJuvbYMkKXuI0JhL-DdFnzEGwd6no9w5iZvucSJrYyKsm-SL0mveXoz',
             'spawns-3': 'https://discord.com/api/webhooks/1458733207603380448/ynSpCAzhFC8oIRsoySmOWsvFTrAP_ONevGS5AVNoq8YlDt_dQkPGMoShUqELcEC0STi5'
         };
+        
+        // Spawn Sender Elements
         const spawnChannelSelect = document.getElementById('spawn-channel-select');
         const colorWheel = document.getElementById('color-wheel');
         const colorInput = document.getElementById('color-input');
-        const fileInput = document.getElementById('file-input');
-        const imagePreview = document.getElementById('image-preview');
-        const removeImageBtn = document.getElementById('remove-image');
-        const previewBox = document.getElementById('preview-box');
-        const previewImageContainer = document.getElementById('preview-image-container');
+        const spawnFileInput = document.getElementById('spawn-file-input');
+        const spawnImagePreview = document.getElementById('spawn-image-preview');
+        const removeSpawnImageBtn = document.getElementById('remove-spawn-image');
+        const spawnPreviewBox = document.getElementById('spawn-preview-box');
+        const spawnPreviewImageContainer = document.getElementById('spawn-preview-image-container');
+        const customMessageContainer = document.getElementById('custom-message-container');
+        const customMessageInput = document.getElementById('custom-message-input');
+        const previewMessage = document.getElementById('preview-message');
+        const previewCatch = document.getElementById('preview-catch');
         const sendSpawnButton = document.getElementById('send-spawn-button');
         const spawnStatusDiv = document.getElementById('spawn-status');
+        const spawnHint = document.getElementById('spawn-hint');
+        const spawnTypeButtons = document.querySelectorAll('.section:first-child .type-btn');
         
+        // Message Sender Elements
         const messageChannelSelect = document.getElementById('message-channel-select');
         const messageInput = document.getElementById('message-input');
+        const messageImageContainer = document.getElementById('message-image-container');
+        const messageFileInput = document.getElementById('message-file-input');
+        const messageImagePreview = document.getElementById('message-image-preview');
+        const removeMessageImageBtn = document.getElementById('remove-message-image');
         const sendMessageButton = document.getElementById('send-message-button');
         const messageStatusDiv = document.getElementById('message-status');
+        const messageTypeButtons = document.querySelectorAll('.section:last-child .type-btn');
         
-        let selectedImage = null;
-        let imageUrl = null;
+        let spawnImage = null;
+        let spawnImageUrl = null;
+        let messageImage = null;
+        let messageImageUrl = null;
+        let spawnType = 'original';
+        let messageType = 'text';
 
+        // Color picker sync for spawn sender
         colorWheel.addEventListener('input', function() {
             colorInput.value = this.value;
             updatePreviewColor();
@@ -495,10 +598,78 @@
         });
         
         function updatePreviewColor() {
-            previewBox.style.borderLeftColor = colorInput.value;
+            spawnPreviewBox.style.borderLeftColor = colorInput.value;
         }
         
-        fileInput.addEventListener('change', function(e) {
+        // Spawn type selection
+        function selectSpawnType(type) {
+            spawnType = type;
+            
+            spawnTypeButtons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(type)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            if (type === 'custom') {
+                customMessageContainer.classList.remove('hidden');
+                spawnHint.textContent = 'upload image, type custom message, and click to send spawn';
+                updateCustomPreview();
+            } else {
+                customMessageContainer.classList.add('hidden');
+                spawnHint.textContent = 'upload pokémon image and click to send spawn';
+                previewMessage.textContent = 'A wild pokémon has appeared!';
+                previewCatch.innerHTML = 'Guess the pokémon and type <span style="color: #eb459e;">@Pokétwo#8236</span> catch <span style="color: #57F287;">pokémon</span> to catch it!';
+            }
+        }
+        
+        // Update custom message preview
+        customMessageInput.addEventListener('input', updateCustomPreview);
+        
+        function updateCustomPreview() {
+            if (spawnType === 'custom') {
+                const message = customMessageInput.value.trim();
+                if (message) {
+                    previewMessage.textContent = message;
+                    previewCatch.innerHTML = '';
+                } else {
+                    previewMessage.textContent = 'Custom spawn message';
+                    previewCatch.innerHTML = '';
+                }
+            }
+        }
+        
+        // Message type selection
+        function selectMessageType(type) {
+            messageType = type;
+            
+            messageTypeButtons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(type)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            if (type === 'image') {
+                messageImageContainer.style.display = 'block';
+            } else {
+                messageImageContainer.style.display = 'none';
+                // Clear image when switching to text only
+                messageImage = null;
+                if (messageImageUrl) {
+                    URL.revokeObjectURL(messageImageUrl);
+                    messageImageUrl = null;
+                }
+                messageFileInput.value = '';
+                messageImagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+            }
+        }
+        
+        // Image upload for spawn sender
+        spawnFileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 if (!file.type.startsWith('image/')) {
@@ -506,43 +677,85 @@
                     return;
                 }
                 
-                selectedImage = file;
-                imageUrl = URL.createObjectURL(file);
+                spawnImage = file;
+                spawnImageUrl = URL.createObjectURL(file);
                 
-                imagePreview.innerHTML = '';
+                // Update preview image
+                spawnImagePreview.innerHTML = '';
                 const img = document.createElement('img');
-                img.src = imageUrl;
-                imagePreview.appendChild(img);
-                imagePreview.appendChild(removeImageBtn);
+                img.src = spawnImageUrl;
+                spawnImagePreview.appendChild(img);
+                spawnImagePreview.appendChild(removeSpawnImageBtn);
                 
-                previewImageContainer.innerHTML = '';
+                // Update embed preview with image
+                spawnPreviewImageContainer.innerHTML = '';
                 const previewImg = document.createElement('img');
-                previewImg.src = imageUrl;
+                previewImg.src = spawnImageUrl;
                 previewImg.className = 'preview-image';
-                previewImageContainer.appendChild(previewImg);
+                spawnPreviewImageContainer.appendChild(previewImg);
             }
         });
         
-        removeImageBtn.addEventListener('click', function(e) {
+        // Remove image for spawn sender
+        removeSpawnImageBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            selectedImage = null;
-            if (imageUrl) {
-                URL.revokeObjectURL(imageUrl);
-                imageUrl = null;
+            spawnImage = null;
+            if (spawnImageUrl) {
+                URL.revokeObjectURL(spawnImageUrl);
+                spawnImageUrl = null;
             }
-            fileInput.value = '';
-            imagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
-            previewImageContainer.innerHTML = '';
+            spawnFileInput.value = '';
+            spawnImagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+            spawnPreviewImageContainer.innerHTML = '';
         });
         
+        // Image upload for message sender
+        messageFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    showStatus(messageStatusDiv, 'pls select an image file', 'error');
+                    return;
+                }
+                
+                messageImage = file;
+                messageImageUrl = URL.createObjectURL(file);
+                
+                // Update preview image
+                messageImagePreview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = messageImageUrl;
+                messageImagePreview.appendChild(img);
+                messageImagePreview.appendChild(removeMessageImageBtn);
+            }
+        });
+        
+        // Remove image for message sender
+        removeMessageImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            messageImage = null;
+            if (messageImageUrl) {
+                URL.revokeObjectURL(messageImageUrl);
+                messageImageUrl = null;
+            }
+            messageFileInput.value = '';
+            messageImagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+        });
+        
+        // Send spawn button
         sendSpawnButton.addEventListener('click', sendSpawn);
         
         function sendSpawn() {
             const channel = spawnChannelSelect.value;
             const color = colorInput.value;
             
-            if (!selectedImage) {
+            if (!spawnImage) {
                 showStatus(spawnStatusDiv, 'pls select an image', 'error');
+                return;
+            }
+            
+            if (spawnType === 'custom' && !customMessageInput.value.trim()) {
+                showStatus(spawnStatusDiv, 'pls enter custom message', 'error');
                 return;
             }
             
@@ -558,15 +771,28 @@
             
             const webhookUrl = webhooks[channel];
             
+            // Create FormData for image upload
             const formData = new FormData();
-            formData.append('file', selectedImage);
+            formData.append('file', spawnImage);
             
-            const filename = selectedImage.name || 'pokemon.png';
+            // Get filename from the uploaded file
+            const filename = spawnImage.name || 'pokemon.png';
+            
+            // Create embed with image inside
+            let embedTitle, embedDescription;
+            
+            if (spawnType === 'original') {
+                embedTitle = "A wild pokémon has appeared!";
+                embedDescription = "Guess the pokémon and type `@Pokétwo#8236 catch <pokémon>` to catch it!";
+            } else {
+                embedTitle = customMessageInput.value.trim();
+                embedDescription = "";
+            }
             
             const embedPayload = {
                 embeds: [{
-                    title: "A wild pokémon has appeared!",
-                    description: "Guess the pokémon and type `@Pokétwo#8236 catch <pokémon>` to catch it!",
+                    title: embedTitle,
+                    description: embedDescription,
                     color: parseInt(color.substring(1), 16),
                     image: {
                         url: `attachment://${filename}`
@@ -584,15 +810,21 @@
                 if (response.ok) {
                     showStatus(spawnStatusDiv, `✓ spawn sent to ${channel}`, 'success');
                     
-                    selectedImage = null;
-                    if (imageUrl) {
-                        URL.revokeObjectURL(imageUrl);
-                        imageUrl = null;
+                    // Clear image after successful send
+                    spawnImage = null;
+                    if (spawnImageUrl) {
+                        URL.revokeObjectURL(spawnImageUrl);
+                        spawnImageUrl = null;
                     }
-                    fileInput.value = '';
-                    imagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
-                    previewImageContainer.innerHTML = '';
+                    spawnFileInput.value = '';
+                    spawnImagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+                    spawnPreviewImageContainer.innerHTML = '';
                     
+                    if (spawnType === 'custom') {
+                        customMessageInput.value = '';
+                    }
+                    
+                    // Reset button
                     setTimeout(() => {
                         sendSpawnButton.disabled = false;
                         sendSpawnButton.innerHTML = `
@@ -621,18 +853,36 @@
             });
         }
         
+        // Send message button
         sendMessageButton.addEventListener('click', sendMessage);
         
-        messageInput.addEventListener('input', function() {
-            sendMessageButton.disabled = this.value.trim() === '';
-        });
+        // Update message button state
+        messageInput.addEventListener('input', updateMessageButtonState);
+        messageFileInput.addEventListener('change', updateMessageButtonState);
+        
+        function updateMessageButtonState() {
+            const hasText = messageInput.value.trim() !== '';
+            const hasImage = messageImage !== null;
+            
+            if (messageType === 'text') {
+                sendMessageButton.disabled = !hasText;
+            } else {
+                sendMessageButton.disabled = !(hasText || hasImage);
+            }
+        }
         
         function sendMessage() {
             const channel = messageChannelSelect.value;
             const message = messageInput.value.trim();
+            const hasImage = messageImage !== null;
             
-            if (!message) {
+            if (messageType === 'text' && !message) {
                 showStatus(messageStatusDiv, 'pls enter a message', 'error');
+                return;
+            }
+            
+            if (messageType === 'image' && !message && !hasImage) {
+                showStatus(messageStatusDiv, 'pls enter message or select image', 'error');
                 return;
             }
             
@@ -648,48 +898,112 @@
             
             const webhookUrl = webhooks[channel];
             
-            const payload = {
-                content: message
-            };
-            
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-            .then(response => {
-                if (response.ok) {
-                    showStatus(messageStatusDiv, `✓ message sent to ${channel}`, 'success');
-                    messageInput.value = '';
-                    
-                    setTimeout(() => {
-                        sendMessageButton.disabled = false;
-                        sendMessageButton.innerHTML = `
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                            </svg>
-                            send message
-                        `;
-                        messageStatusDiv.style.display = 'none';
-                    }, 2000);
-                } else {
-                    throw new Error(`http error: ${response.status}`);
-                }
-            })
-            .catch(error => {
-                console.error('error:', error);
-                showStatus(messageStatusDiv, 'failed to send. try again.', 'error');
+            if (hasImage) {
+                // Send message with image
+                const formData = new FormData();
+                formData.append('file', messageImage);
                 
-                sendMessageButton.disabled = false;
-                sendMessageButton.innerHTML = `
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                    send message
-                `;
-            });
+                if (message) {
+                    // Add message content with image
+                    const payload = {
+                        content: message
+                    };
+                    formData.append('payload_json', JSON.stringify(payload));
+                } else {
+                    // Just send the image
+                    const payload = {
+                        content: ''
+                    };
+                    formData.append('payload_json', JSON.stringify(payload));
+                }
+                
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showStatus(messageStatusDiv, `✓ message sent to ${channel}`, 'success');
+                        messageInput.value = '';
+                        messageImage = null;
+                        if (messageImageUrl) {
+                            URL.revokeObjectURL(messageImageUrl);
+                            messageImageUrl = null;
+                        }
+                        messageFileInput.value = '';
+                        messageImagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+                        
+                        setTimeout(() => {
+                            sendMessageButton.disabled = false;
+                            sendMessageButton.innerHTML = `
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                                send message
+                            `;
+                            messageStatusDiv.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error(`http error: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('error:', error);
+                    showStatus(messageStatusDiv, 'failed to send. try again.', 'error');
+                    
+                    sendMessageButton.disabled = false;
+                    sendMessageButton.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        send message
+                    `;
+                });
+            } else {
+                // Send text only message
+                const payload = {
+                    content: message
+                };
+                
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showStatus(messageStatusDiv, `✓ message sent to ${channel}`, 'success');
+                        messageInput.value = '';
+                        
+                        setTimeout(() => {
+                            sendMessageButton.disabled = false;
+                            sendMessageButton.innerHTML = `
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                                send message
+                            `;
+                            messageStatusDiv.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error(`http error: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('error:', error);
+                    showStatus(messageStatusDiv, 'failed to send. try again.', 'error');
+                    
+                    sendMessageButton.disabled = false;
+                    sendMessageButton.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        send message
+                    `;
+                });
+            }
         }
 
         function showStatus(element, message, type) {
@@ -698,8 +1012,10 @@
             element.style.display = 'block';
         }
         
+        // Initialize
         updatePreviewColor();
-        sendMessageButton.disabled = true;
+        updateMessageButtonState();
+        customMessageContainer.classList.add('hidden');
     </script>
 </body>
 </html>
