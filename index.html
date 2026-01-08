@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pokétwo spawn sender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: #121212;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .box {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #333;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .title {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .dropdowns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .dropdown {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dropdown label {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 8px;
+            margin-left: 2px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        select:hover {
+            border-color: #666;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #5865f2;
+            box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+        }
+        
+        .color-picker-container {
+            margin-bottom: 25px;
+        }
+        
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .color-label {
+            color: #aaa;
+            font-size: 13px;
+            min-width: 60px;
+        }
+        
+        .color-wheel {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #444;
+            cursor: pointer;
+            background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+        }
+        
+        .color-input {
+            flex: 1;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-family: monospace;
+        }
+        
+        .image-upload-container {
+            margin-bottom: 25px;
+        }
+        
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .image-label {
+            color: #aaa;
+            font-size: 13px;
+        }
+        
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            background: #2a2a2a;
+            border: 2px dashed #444;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .upload-button {
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .upload-button:hover {
+            background: #333;
+            border-color: #5865f2;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .preview-box {
+            background: #2f3136;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #5865F2;
+            font-family: 'gg sans', 'Noto Sans', Helvetica, Arial, sans-serif;
+            color: #fff;
+            line-height: 1.5;
+        }
+        
+        .preview-title {
+            color: #57F287;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .preview-text {
+            color: #dcddde;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .send-button-container {
+            margin-bottom: 20px;
+        }
+        
+        .send-button {
+            width: 100%;
+            padding: 16px;
+            background: #5865f2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .send-button:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+        }
+        
+        .send-button:active {
+            transform: translateY(0);
+        }
+        
+        .send-button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .send-button svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 14px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .success {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+        
+        .error {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        
+        .sending {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+        
+        .hint {
+            color: #666;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        option {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 10px;
+        }
+        
+        textarea::-webkit-scrollbar,
+        select::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        textarea::-webkit-scrollbar-track,
+        select::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb,
+        select::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb:hover,
+        select::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .image-preview:hover .remove-image {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <div class="title">pokétwo spawn sender</div>
+            
+            <div class="dropdowns">
+                <div class="dropdown">
+                    <label>spawn channel</label>
+                    <select id="channel-select">
+                        <option value="spawns-1">spawns-1</option>
+                        <option value="spawns-2">spawns-2</option>
+                        <option value="spawns-3">spawns-3</option>
+                    </select>
+                </div>
+                
+                <div class="dropdown">
+                    <label>message type</label>
+                    <select id="type-select">
+                        <option value="embed">embed</option>
+                        <option value="normal">normal</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="color-picker-container">
+                <div class="color-picker">
+                    <div class="color-label">color</div>
+                    <input type="color" id="color-wheel" class="color-wheel" value="#5865F2">
+                    <input type="text" id="color-input" class="color-input" value="#5865F2" maxlength="7">
+                </div>
+            </div>
+            
+            <div class="image-upload-container">
+                <div class="image-upload">
+                    <div class="image-label">pokémon image</div>
+                    <div class="image-preview" id="image-preview">
+                        <div style="color: #777; text-align: center;">no image selected</div>
+                        <button class="remove-image" id="remove-image">×</button>
+                    </div>
+                    <label for="file-input" class="upload-button">
+                        choose image file
+                    </label>
+                    <input type="file" id="file-input" class="file-input" accept="image/*">
+                </div>
+            </div>
+            
+            <div class="preview-box" id="preview-box">
+                <div class="preview-title">Pokétwo 2:44 PM</div>
+                <div class="preview-text">A wild pokémon has appeared!</div>
+                <div class="preview-text">Guess the pokémon and type <span style="color: #eb459e;">@Pokétwo#8236</span> catch <span style="color: #57F287;">pokémon</span> to catch it!</div>
+            </div>
+            
+            <div class="send-button-container">
+                <button class="send-button" id="send-button">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                    send spawn message
+                </button>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="hint">
+                click button to send pokétwo spawn message
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const webhooks = {
+            'spawns-1': 'https://discord.com/api/webhooks/1458732887150170317/FY6pfqa0pbsMg4tbx9lhBSYbww05koPopYpbB08Szjy37pnza_mK7HAw4K8EAW_h97Cr',
+            'spawns-2': 'https://discord.com/api/webhooks/1458732405035892832/-bvLKtLxmxEhZRJuvbYMkKXuI0JhL-DdFnzEGwd6no9w5iZvucSJrYyKsm-SL0mveXoz',
+            'spawns-3': 'https://discord.com/api/webhooks/1458733207603380448/ynSpCAzhFC8oIRsoySmOWsvFTrAP_ONevGS5AVNoq8YlDt_dQkPGMoShUqELcEC0STi5'
+        };
+        
+        const channelSelect = document.getElementById('channel-select');
+        const typeSelect = document.getElementById('type-select');
+        const colorWheel = document.getElementById('color-wheel');
+        const colorInput = document.getElementById('color-input');
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const removeImageBtn = document.getElementById('remove-image');
+        const previewBox = document.getElementById('preview-box');
+        const sendButton = document.getElementById('send-button');
+        const statusDiv = document.getElementById('status');
+        
+        let selectedImage = null;
+        let imageUrl = null;
+
+        colorWheel.addEventListener('input', function() {
+            colorInput.value = this.value;
+            updatePreviewColor();
+        });
+        
+        colorInput.addEventListener('input', function() {
+            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                colorWheel.value = this.value;
+                updatePreviewColor();
+            }
+        });
+        
+        colorInput.addEventListener('change', function() {
+            if (!this.value.startsWith('#')) {
+                this.value = '#' + this.value;
+            }
+            if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                colorWheel.value = this.value;
+                updatePreviewColor();
+            }
+        });
+        
+        function updatePreviewColor() {
+            previewBox.style.borderLeftColor = colorInput.value;
+        }
+        
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    showStatus('pls select an image file', 'error');
+                    return;
+                }
+                
+                selectedImage = file;
+                imageUrl = URL.createObjectURL(file);
+                
+                imagePreview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                imagePreview.appendChild(img);
+                imagePreview.appendChild(removeImageBtn);
+            }
+        });
+        
+        removeImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectedImage = null;
+            if (imageUrl) {
+                URL.revokeObjectURL(imageUrl);
+                imageUrl = null;
+            }
+            fileInput.value = '';
+            imagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        
+        function sendMessage() {
+            const channel = channelSelect.value;
+            const messageType = typeSelect.value;
+            const color = colorInput.value;
+            
+            if (!selectedImage && messageType === 'embed') {
+                showStatus('pls select an image for embed', 'error');
+                return;
+            }
+            
+            sendButton.disabled = true;
+            sendButton.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                sending spawn...
+            `;
+            
+            showStatus('sending spawn message...', 'sending');
+            
+            const webhookUrl = webhooks[channel];
+            const messageContent = `Pokétwo 2:44 PM\n\nA wild pokémon has appeared!\n\nGuess the pokémon and type @Pokétwo#8236 catch <pokémon> to catch it!`;
+            
+            if (messageType === 'embed') {
+                const formData = new FormData();
+                formData.append('file', selectedImage);
+                
+                fetch(webhookUrl + '?wait=true', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const imageAttachmentUrl = data.attachments[0].url;
+                    
+                    const payload = {
+                        embeds: [{
+                            title: "Pokétwo 2:44 PM",
+                            description: "A wild pokémon has appeared!\n\nGuess the pokémon and type `@Pokétwo#8236 catch <pokémon>` to catch it!",
+                            color: parseInt(color.substring(1), 16),
+                            image: {
+                                url: imageAttachmentUrl
+                            }
+                        }]
+                    };
+                    
+                    return fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const channelName = channel;
+                        showStatus(`✓ spawn sent to ${channelName}`, 'success');
+                        
+                        setTimeout(() => {
+                            sendButton.disabled = false;
+                            sendButton.innerHTML = `
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                                send spawn message
+                            `;
+                            statusDiv.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error(`http error: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('error:', error);
+                    showStatus('failed to send. try again.', 'error');
+                    
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        send spawn message
+                    `;
+                });
+            } else {
+                const payload = {
+                    content: messageContent
+                };
+                
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const channelName = channel;
+                        showStatus(`✓ spawn sent to ${channelName}`, 'success');
+                        
+                        setTimeout(() => {
+                            sendButton.disabled = false;
+                            sendButton.innerHTML = `
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                                send spawn message
+                            `;
+                            statusDiv.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error(`http error: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('error:', error);
+                    showStatus('failed to send. try again.', 'error');
+                    
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        send spawn message
+                    `;
+                });
+            }
+        }
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = 'block';
+        }
+        
+        updatePreviewColor();
+    </script>
+</body>
+</html>
