@@ -224,11 +224,16 @@
             margin-bottom: 8px;
         }
         
+        .preview-image-container {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
         .preview-image {
             max-width: 100%;
             max-height: 150px;
-            margin-top: 10px;
             border-radius: 5px;
+            border: 1px solid #444;
         }
         
         .send-button-container {
@@ -335,17 +340,10 @@
         .image-preview:hover .remove-image {
             display: block;
         }
-        
-        .separator {
-            height: 1px;
-            background: #333;
-            margin: 25px 0;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Left Section: Pokétwo Spawn Sender -->
         <div class="section">
             <div class="box">
                 <div class="title">pokétwo spawn sender</div>
@@ -386,6 +384,8 @@
                 <div class="preview-box" id="preview-box">
                     <div class="preview-text">A wild pokémon has appeared!</div>
                     <div class="preview-text">Guess the pokémon and type <span style="color: #eb459e;">@Pokétwo#8236</span> catch <span style="color: #57F287;">pokémon</span> to catch it!</div>
+                    <div class="preview-image-container" id="preview-image-container">
+                    </div>
                 </div>
                 
                 <div class="send-button-container">
@@ -405,7 +405,6 @@
             </div>
         </div>
         
-        <!-- Right Section: Pokétwo Message Sender -->
         <div class="section">
             <div class="box">
                 <div class="title">pokétwo message sender</div>
@@ -449,14 +448,11 @@
     </div>
 
     <script>
-        // webhook urls for spawn channels
         const webhooks = {
             'spawns-1': 'https://discord.com/api/webhooks/1458732887150170317/FY6pfqa0pbsMg4tbx9lhBSYbww05koPopYpbB08Szjy37pnza_mK7HAw4K8EAW_h97Cr',
             'spawns-2': 'https://discord.com/api/webhooks/1458732405035892832/-bvLKtLxmxEhZRJuvbYMkKXuI0JhL-DdFnzEGwd6no9w5iZvucSJrYyKsm-SL0mveXoz',
             'spawns-3': 'https://discord.com/api/webhooks/1458733207603380448/ynSpCAzhFC8oIRsoySmOWsvFTrAP_ONevGS5AVNoq8YlDt_dQkPGMoShUqELcEC0STi5'
         };
-        
-        // Spawn Sender Elements
         const spawnChannelSelect = document.getElementById('spawn-channel-select');
         const colorWheel = document.getElementById('color-wheel');
         const colorInput = document.getElementById('color-input');
@@ -464,10 +460,10 @@
         const imagePreview = document.getElementById('image-preview');
         const removeImageBtn = document.getElementById('remove-image');
         const previewBox = document.getElementById('preview-box');
+        const previewImageContainer = document.getElementById('preview-image-container');
         const sendSpawnButton = document.getElementById('send-spawn-button');
         const spawnStatusDiv = document.getElementById('spawn-status');
         
-        // Message Sender Elements
         const messageChannelSelect = document.getElementById('message-channel-select');
         const messageInput = document.getElementById('message-input');
         const sendMessageButton = document.getElementById('send-message-button');
@@ -476,7 +472,6 @@
         let selectedImage = null;
         let imageUrl = null;
 
-        // Color picker sync for spawn sender
         colorWheel.addEventListener('input', function() {
             colorInput.value = this.value;
             updatePreviewColor();
@@ -503,7 +498,6 @@
             previewBox.style.borderLeftColor = colorInput.value;
         }
         
-        // Image upload for spawn sender
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -520,10 +514,15 @@
                 img.src = imageUrl;
                 imagePreview.appendChild(img);
                 imagePreview.appendChild(removeImageBtn);
+                
+                previewImageContainer.innerHTML = '';
+                const previewImg = document.createElement('img');
+                previewImg.src = imageUrl;
+                previewImg.className = 'preview-image';
+                previewImageContainer.appendChild(previewImg);
             }
         });
         
-        // Remove image for spawn sender
         removeImageBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             selectedImage = null;
@@ -533,9 +532,9 @@
             }
             fileInput.value = '';
             imagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+            previewImageContainer.innerHTML = '';
         });
         
-        // Send spawn button
         sendSpawnButton.addEventListener('click', sendSpawn);
         
         function sendSpawn() {
@@ -559,17 +558,18 @@
             
             const webhookUrl = webhooks[channel];
             
-            // Create FormData for image upload
             const formData = new FormData();
             formData.append('file', selectedImage);
             
-            // Add the embed payload as JSON string
+            const filename = selectedImage.name || 'pokemon.png';
+            
             const embedPayload = {
                 embeds: [{
-                    description: "A wild pokémon has appeared!\n\nGuess the pokémon and type `@Pokétwo#8236 catch <pokémon>` to catch it!",
+                    title: "A wild pokémon has appeared!",
+                    description: "Guess the pokémon and type `@Pokétwo#8236 catch <pokémon>` to catch it!",
                     color: parseInt(color.substring(1), 16),
                     image: {
-                        url: "attachment://uploaded_image.png"
+                        url: `attachment://${filename}`
                     }
                 }]
             };
@@ -584,7 +584,6 @@
                 if (response.ok) {
                     showStatus(spawnStatusDiv, `✓ spawn sent to ${channel}`, 'success');
                     
-                    // Clear image after successful send
                     selectedImage = null;
                     if (imageUrl) {
                         URL.revokeObjectURL(imageUrl);
@@ -592,8 +591,8 @@
                     }
                     fileInput.value = '';
                     imagePreview.innerHTML = '<div style="color: #777; text-align: center;">no image selected</div>';
+                    previewImageContainer.innerHTML = '';
                     
-                    // Reset button
                     setTimeout(() => {
                         sendSpawnButton.disabled = false;
                         sendSpawnButton.innerHTML = `
@@ -622,10 +621,8 @@
             });
         }
         
-        // Send message button
         sendMessageButton.addEventListener('click', sendMessage);
         
-        // Update message button state
         messageInput.addEventListener('input', function() {
             sendMessageButton.disabled = this.value.trim() === '';
         });
@@ -701,7 +698,6 @@
             element.style.display = 'block';
         }
         
-        // Initialize
         updatePreviewColor();
         sendMessageButton.disabled = true;
     </script>
